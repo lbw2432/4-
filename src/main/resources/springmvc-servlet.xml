@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/mvc
+        https://www.springframework.org/schema/mvc/spring-mvc.xsd
+        http://www.springframework.org/schema/context
+        https://www.springframework.org/schema/context/spring-context.xsd">
+        <mvc:annotation-driven>
+                <mvc:message-converters>
+                        <!--  配置 Fastjson 支持 -->
+                        <bean class="com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter">
+                                <property name="supportedMediaTypes">
+                                        <list>
+                                                <value>text/html;charset=UTF-8</value>
+                                                <value>application/json</value>
+                                        </list>
+                                </property>
+                                <property name="fastJsonConfig" ref="fastJsonConfig"/>
+                        </bean>
+                </mvc:message-converters>
+        </mvc:annotation-driven>
+        <bean name="fastJsonConfig" class="com.alibaba.fastjson.support.config.FastJsonConfig">
+                <property name="serializerFeatures">
+                        <list>
+                                <value>WriteMapNullValue</value> <!--  是否输出值为 null 的字段 , 默认为 false-->
+                                <value>WriteMapNullValue</value> <!--  是否输出值为 null 的字段 , 默认为 false-->
+                                <value>WriteNullListAsEmpty</value> <!-- List 字段如果为 null, 输出为 [], 而非 null-->
+                                <value>WriteNullStringAsEmpty</value> <!--  字符类型字段如果为 null, 输出为 ”“, 而非 null-->
+                                <value>WriteDateUseDateFormat</value>
+                        </list>
+                </property>
+        </bean>
+        <context:component-scan base-package="com.schoolMall.controller"/>
+        <!--配置视图解析器 /WEB-INF/jsp/index.jsp  -->
+        <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+                <property name="prefix" value="/WEB-INF/jsp/"/>
+                <property name="suffix" value=".jsp"/>
+        </bean>
+         <!--静态资源-->
+        <mvc:resources location="/statics/" mapping="/statics/**" />
+        <!--处理静态资源-->
+        <mvc:default-servlet-handler/>
+        <mvc:resources location="/js/" mapping="/js/**" />
+        <mvc:resources location="/css/" mapping="/css/**" />
+        <mvc:resources location="/images/" mapping="/images/**" />
+        <mvc:resources location="/manage/" mapping="/manage/**" />
+
+        <!--全局异常处理-->
+        <bean class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
+                <!--异常映射-->
+                <property name="exceptionMappings">
+                        <props>
+                             <prop key="java.lang.RuntimeException">error</prop>
+                        </props>
+                </property>
+        </bean>
+        <!--拦截器-->
+        <mvc:interceptors>
+                <mvc:interceptor>
+                        <!--<mvc:mapping path="/**"/>-->   <!-- 需要拦截处理的url-->
+                        <mvc:mapping path="/user/queryByPage"/>
+                        <mvc:exclude-mapping path="/login"/> <!-- 不需要拦截处理的url-->
+                        <mvc:exclude-mapping path="/logout"/><!-- 不需要拦截处理的url-->
+                        <mvc:exclude-mapping path="/statics/**"/><!-- 不需要拦截处理的url-->
+                        <bean class="com.schoolMall.interceptor.LoginInterceptor"/>
+                </mvc:interceptor>
+        </mvc:interceptors>
+        <!--用于文件上传-->
+        <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+                <property name="maxUploadSize" value="5000000"/> <!--单位字节-->
+                <property name="defaultEncoding" value="UTF-8"/>
+        </bean>
+</beans>
